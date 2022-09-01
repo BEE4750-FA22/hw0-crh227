@@ -163,7 +163,8 @@ ytVal = rand(myLogNorm, 100)
 ## Problem 4.2
 ```julia
 function PhosLake(a, b, q, T, x0)
-# function takes in constant parameters a, b, q, period T [years], and intial concentration of phophorus x0
+# function takes in constant parameters a, b, q, period T [years], 
+# and intial concentration of phophorus x0
 PhosC = zeros(T+1)
 PhosC[1] = x0   # initial P at T = 0
 
@@ -171,8 +172,9 @@ for i = 1:T
     # setting up parameters
     y = ytVal[i]
     xOld = PhosC[i]
-
-    PhosC[i+1] = xOld + a + y + (xOld^q)/(1+xOld^q) - b*xOld    # updating new Xt+1 value
+    
+    # updating new Xt+1 value
+    PhosC[i+1] = xOld + a + y + (xOld^q)/(1+xOld^q) - b*xOld   
 end
 return PhosC
 end
