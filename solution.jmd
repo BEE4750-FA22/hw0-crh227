@@ -1,0 +1,76 @@
+---
+title : Farm Allocation LP Example
+author : BEE 4750/5750
+date : Fall 2022
+weave_options:
+template: ../bee4750html.tpl
+doctype: md2html
+---
+# Questions
+
+1. Formulate a linear programming model for the farmer's decision problem.
+2. Implement this linear program in `JuMP`.
+3. What are the:
+    * optimal planting allocation and pesticide application rates?
+    * maximum profits the farmer can make?
+    * value of an additional hectare of land? 
+
+## formulating linear programming model
+```julia
+import Pkg
+Pkg.add("JuMP")
+
+# set up programs
+using JuMP
+using HiGHS
+
+# create model
+pest_model = Model(HiGHS.Optimizer)
+
+# define variables
+@variable(pest_model,C[1:3] >= 0)   # corn
+@variable(pest_model,O[1:3] >= 0)   # oat
+@variable(pest_model,S[1:3] >= 0)   # soy
+@variable(pest_model,T[1:3] >= 0)   # tomato
+@variable(pest_model,W[1:3] >= 0)   # wheat
+
+# objective function
+@objective(pest_model,Max,[908;1034;1278]'*C + [700;750;780]'*O + [960;1126;1250]'*S + [1004;1110;1194]'*T + [557;696;804]'*W)
+```
+## constraints
+```julia
+# constraints
+@constraint(pest_model,area, sum(C)+sum(O)+sum(S)+sum(T)+sum(W) <= 200)     # land area
+
+@constraint(pest_model,corn_demand, 5900*C[1]+6700*C[2]+7900*C[3] <= 250000)    # demands
+@constraint(pest_model,oat_demand, 4000*O[1]+4400*O[2]+4600*O[3] <= 250000)
+@constraint(pest_model,soy_demand, 3500*S[1]+4100*S[2]+4500*S[3] <= 250000)
+@constraint(pest_model,tomato_demand, 2700*T[1]+3000*T[2]+3200*T[3] <= 250000)
+@constraint(pest_model,wheat_demand, 3100*W[1]+3800*W[2]+4200*W[3] <= 250000)
+
+@constraint(pest_model,corn_lim, -0.4*C[1] + 0.4*C[2] + 1.4*C[3] <= 0)      # regulatory limits
+@constraint(pest_model,oat_lim, -0.4*O[1] + 0.4*O[2] + 1.4*O[3] <= 0)
+@constraint(pest_model,soy_lim, -0.8*S[1] + 0.2*S[2] + 1.2*S[3] <= 0)
+@constraint(pest_model,tomato_lim, -0.8*T[1] + 0.2*T[2] + 1.2*T[3] <= 0)
+@constraint(pest_model,wheat_lim, -0.7*W[1] + 0.3*W[2] + 1.3*W[3] <= 0)
+```
+
+## printing and solving!
+```julia
+print(pest_model)
+optimize!(pest_model)       # actually solving
+solution_summary(pest_model)
+objective_value(pest_model)
+
+value.(C)
+value.(O)
+value.(S)
+value.(T)
+value.(W)
+
+has_duals(pest_model)
+shadow_price(corn_lim)
+shadow_price(oat_demand)
+```
+
+```
